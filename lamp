@@ -1,0 +1,78 @@
+!/bin/bash
+
+
+echo "###################################################################################"
+echo "COMECANDO INSTALACAO PACOTE LAMP"
+echo "###################################################################################"
+
+
+
+## Mudar idioma
+sudo apt-get install locales -y
+echo "pt_BR.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+export LANG=pt_BR.UTF-8
+
+
+#SUBISTITUIR REPOSITORIO APT
+sudo mv /etc/apt/sources.list /etc/apt/sources.list.ori && touch /etc/apt/sources.list && echo "###### Ubuntu Main Repos
+deb http://55.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+deb-src http://55.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+
+###### Ubuntu Update Repos
+deb http://55.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+deb http://55.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
+deb http://55.archive.ubuntu.com/ubuntu/ xenial-proposed main restricted universe multiverse 
+deb http://55.archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse 
+deb-src http://55.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+deb-src http://55.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
+deb-src http://55.archive.ubuntu.com/ubuntu/ xenial-proposed main restricted universe multiverse 
+deb-src http://55.archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse 
+
+###### Ubuntu Partner Repo
+deb http://archive.canonical.com/ubuntu xenial partner
+deb-src http://archive.canonical.com/ubuntu xenial partner
+" >> /etc/apt/sources.list
+
+#Update the repositories
+
+sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
+
+#PHP7 PPA
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:ondrej/php
+
+# Apache, Php, MySQL e instalação de pacotes necessários
+
+sudo apt-get -y install apache2 php7.0 libapache2-mod-php7.0 php7.0-mcrypt php7.0-curl php7.0-mysql php7.0-gd php7.0-cli php7.0-dev mysql-client
+php7.0enmod mcrypt
+
+#SEGURANCA PHP
+sudo sed 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.0/apache2/php.ini
+####UFW
+sudo ufw enable
+sudo ufw allow in "Apache Full"
+
+# Os seguintes comandos definem a senha do root MySQL para MYPASSWORD123 quando você instala o pacote mysql-server.
+
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password MYPASSWORD123'
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password MYPASSWORD123'
+sudo apt-get -y install mysql-server
+
+# Reinicie todos os serviços instalados para verificar se tudo está instalado corretamente
+
+echo -e "\n"
+
+service apache2 restart && service mysql restart > /dev/null
+
+echo -e "\n"
+
+php -v
+
+if [ $? -ne 0 ]; then
+   echo "Please Check the Install Services, There is some $(tput bold)$(tput setaf 1)Problem$(tput sgr0)"
+else
+   echo "Installed Services run $(tput bold)$(tput setaf 2)Sucessfully$(tput sgr0)"
+fi
+
+echo -e "\n"
